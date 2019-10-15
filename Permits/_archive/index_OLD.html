@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tacoma Permits Search Map</title>
+  <link rel="shortcut icon" href="images/tacoma16.ico">
+  <!-- jQuery CSS -->
+  <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+  <!-- Custom Tacoma CSS--> 
+  <link href="css/TacomaSearch.css" rel="stylesheet">
+  
+  <!-- jQuery 1,2-->
+  <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+  <!-- Google Maps 3-->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPoaOE5Rhl1zF-w8kXaJ0taaDSvdi1L44&libraries=places"></script>
+  <!--Marker Cluster 4-->
+  <script src="SearchMap/js/markerclusterer.js"></script>
+    <!-- D3 JavaScript 5-->
+    <script src="js/d3.min.js"></script>
+    <!--d3-dsv for exporting to CSV  6-->
+    <script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+  <!--Moment JavaScript 7-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.1/moment.min.js"></script>
+   <!--Search Map 8-->
+   <script src="SearchMap/js/searchMap.js"></script>
+
+ </head>
+
+<body>
+<div data-role="page" id="index" data-theme="a">
+  <div data-role="header" data-position="fixed">
+    <a href="#leftPanel" class="ui-btn ui-btn-inline ui-icon-bars ui-btn-icon-left ui-corner-all ui-shadow ui-nodisc-icon ui-alt-icon">Menu</a>
+    <!--image taking too long - CDATA message <h1><img src="images/tacoma25.jpg" alt="Tacoma Logo"> Tacoma Permits (BETA)</h1>-->
+    <h1>Tacoma Permits (BETA)</h1>
+    <a href="#rightPanel" class="ui-btn ui-btn-inline ui-btn-icon-right ui-corner-all ui-shadow ui-nodisc-icon ui-alt-icon ui-icon-filterIcon">Filter</a>
+  </div>
+
+  <div data-role="main" class="ui-content">
+     <div id="searchMap" class="searchMapBox" ></div>
+     <input id="pac-input" class="controls" type="text" placeholder="Search address or place">
+  </div>
+
+<!-- start left panel -->
+  <div data-role="panel" id="leftPanel" data-display="overlay" data-theme="b"> 
+
+    <ul data-role="listview">
+      <li data-icon="arrow-l"><a href="#" data-rel="close">Close Menu</a><hr></li> 
+      <li> <a href="dashboard.html" target="_blank">Dashboard </a><hr></li>
+      <li> <a href="http://www.civicdata.com/organization/tacoma-ed21d4b6-552d" target="_blank">Tacoma CivicData </a> <hr></li>
+      <li data-icon="info"> <a href="#About" data-rel="popup" data-position-to="window">About</a> <hr></li>
+      <li data-icon="info"> <a href="#Help" data-rel="popup" data-position-to="window">Help</a> <hr></li>
+    </ul>
+
+        <!--CITY LOGO AND LINK-->
+        <div id="logoHolder">
+          <a href="http://www.tacomapermits.org/" target="_blank">
+            <img style="-webkit-user-select: none" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAQCAwMDAgQDAwMEBAQEBQkGBQUFBQsICAYJDQsNDQ0LDAwOEBQRDg8TDwwMEhgSExUWFxcXDhEZGxkWGhQWFxb/2wBDAQQEBAUFBQoGBgoWDwwPFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhb/wAARCAA6ACgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDe/ad+NHxT8NfH3xNoWheM7qy02yuIktrdLW3ZY1NvExGWjJPzMTye9cL/AMNC/Gv/AKKBe/8AgHa//GqT9sb/AJOe8Yf9fcP/AKSw15pX7LluW4KWCpSlSi24roux+W4/MMXHF1YxqtJSfV9z0z/hoX41f9FBvv8AwDtf/jVH/DQvxq/6KBff+Adr/wDGq5P4eeCPFXjrWDpfhXRptRuEAaQqypHCDwC8jEKuT0yee2a9k0/9kjxbHZwXHiPxf4f0bzpIoymXnZHkcIidFUsXIUYOCTwayxksiwb5a6gn2sr/AHJFYWOcYlc1Fya730+9nP8Aw7+PPxf1D4heH7C+8d3k1rd6vaQ3ETWlsBJG8yKykiPIyCRx60V0Fv8As0+OPBPjfQdb1PVdAk0211uyZp455QSPtCYG0x8EnAAzySMd6K+SzytlVSpB4bltboj6bJ6OYxpzVfmvfqzhv2yCB+054w/6+oOv/XrDWB4Z8D3lxpkmva87aRolsMyTTNHHNcnYXWKBZWRWldeUDMNwyU37SK9p+PnwK+LXj39oLxdrXhPTNL0+wa6hFrqeqXbRm5f7JEC0aqrEIpBUtjO7OCcHb1nw9/ZCFx4R03Svit8QtY1u3tZ2mm0DR5zZ6VKWO4iXAEszFsEyFkbAVQFUYq63FsqWDp4fCx1UUm36dF/mKnw1Gpip18S9G20l+pofs36raad8I4vEmhaBpt3LZXc1rBpujawZrLTpRGGdr67VNss5RQGmVHRdyqmxG3Nu/FL4lfD3TNe8MeLtW/sPUWaKe40zV9Ohn1BfKiZFukMkCMsQUSwlZGJRmLqQn3q6bwX8MJ/hnY6tZfC6bStN0u7RZLPSLuwDwQXHzZcPG0TgNldxdpXwowQFCnQs00Vf7K1Xx3b+GLHX9BDRWTWF8ZFsy4AdYmZI2XeAqlcYYcdyD8XOpKpJyk7tn1MIRhFRirJFDTv+Em8V6pHM0UlnpcN2kunvcCK9s9d0+TyZQ5EbBoZomH7p2YHA3bXLFVKzNe/aD+GnhnV9E0OO5Ly61rSaVBFbKP3UryhAzLkFVLsRwOPQUVJepwH7Snx5+NvhT4pal4X8DfAvxJrul2EkYGsW2l3E0V4rQo7eWVQr8rMVJyeVI4xXkHiL48/tY38gaw+CPi6w8xiZwnh67O/5do/gyMcHg9vrXu37RHhfRbL48eD7htMh1H/hIP8AhIbvULe5kRFuimjpGkZduFUCFcE8KSWroNB+L1zbfELRvhakVjf6nqEFl9j1W3SQ2flPbXksrcnMwT7Ayh0YK5mX7u1hQFz5D8e/Fn9tTxDZNY2nw68baXb7cA23hu6WQnGNxbYTnj1968T/AOFe/tM/28+s/wDCv/iP9tklMjS/2LdhixOc5Ce5r9NNR+Lusado/ifU9S0exhh8E6lYaZrSI7u0ss4gaWSHphI4rqF1BBLkMnycMc3wD8XvGniex8KSDSNDspfF+k6rfQ5aaVbE2MsUfzcqZRL5o4Gwp6vQNSt0Pz1+Evwq+O0vxz8Gat4h+HHjoW9n4jsJ57m60S6CQotzGzOzMnAABJJ6AGiv0Q8N/G3UNV8O+GvEb6fpcVr4hudCiXTYJ2uLqFdRhgbzZJF+WEJJcBQrqDIIiQRvXBTuJu55D+2F8U/D178WLzwl4h8H399H4ct7vTkkttcW3WeK+s1jn3Kbd2BMchUENxjI5rkm+PGht4+i8azeDNXn16BbUQ3sniKImIwR3MSlE+ybF3RXlwjKF2nfuwHAYfcOoeGfDl7eSXV74f0u4nlOZJZrKN3c4xySMngCof8AhD/CX/QraL/4L4v/AImvqsP/AGX7KPPhruyu+d6nzdb+0PaS5MRZX25UfGFz+0R4fnlvi/w5uBHq11aXuqQDXl8u/ubd1eOaQfZfvFo4twXCsI1UgrkGl4V+POheH49Aj0/wVquPDVjfWWn+Z4ghbEd26vNu/wBD5O6NCPTbjBBOftz/AIQ/wj/0K2i/+C+L/wCJo/4Q/wAJf9Ctov8A4L4v/ia1/wCEn/oE/wDJ5Gf/AApf9BP/AJIj4d+HXxO8J2keieEdP8G63b2Ka7pV5AreJUYJdWq29vBKwFqN+I7eEFCdpK7sBvmor7ki8JeFI5Fkj8MaOrIwKsthECCOhB20V5uO+o8y9lQ5V/ibO/B/W+V+0rcz/wAKR//Z" width="40" height="58" title="City of Tacoma Permits Website" border="0"> 
+          </a>
+        </div>
+
+        <!--About popup-->
+        <div data-role="popup" id="About" class="ui-content" data-overlay-theme="b" style="max-width:350px; padding: 10px;">
+          <div data-role="header"><h1>Tacoma Permits</h1></div>
+
+          <a href="" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+          
+          <div><p>The Permit Dashboard is for citizens to access information about permitting throughout the City of Tacoma. Search by address, filter permit types, choose date ranges, and collect data for up to seven years of permitting history.</p></div>
+
+          <div><p>Please visit our <a href="http://tacomapermits.org/dashboard" target = "_blank">website</a> for more details.</p></div>
+
+          <div>
+            <p>
+            <a href="http://www.cityoftacoma.org/" target="_blank">
+              <img style="-webkit-user-select: none" src="data:image/jpeg;base64,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" width="40" height="58" title="City of Tacoma's home page" border="0"> 
+            </a>
+            </p>
+          </div>
+
+        </div>
+
+        <!--Help popup-->
+        <div data-role="popup" id="Help" class="ui-content" data-overlay-theme="b" style="max-width:350px; padding: 10px;">
+         <div data-role="header" class="ui-corner-top"><h1>HELP</h1></div>
+          <a href="" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+           <p>&nbsp;</p>
+
+           <div class="helpButton"><img src="images/fullScreen.png" class="helpButtonImg"></div>
+            <p><h3> Full Screen Map:</h3> <br>Expand map to full screen, removing page header and footer.  <br>&nbsp;</p>
+           <div style='clear:both;'><hr color='#ACB1DB'></div>
+
+           <div class="helpButton"><img src="images/resetScreen.png" class="helpButtonImg"></div>
+            <p><h3> Exit Full Screen Map:</h3> <br>Reset map with page header and footer.  <br>&nbsp;</p>
+           <div style='clear:both;'><hr color='#ACB1DB'></div>
+
+           <div class="helpButton"><img src="images/homeWhite.png" class="helpButtonImg"></div>
+            <p><h3> Zoom to Tacoma:</h3> <br>&nbsp;Zoom to City of Tacoma boundaries.  <br>&nbsp;</p>
+           <div style='clear:both;'><hr color='#ACB1DB'></div>
+           
+        </div>
+    
+  </div> 
+<!-- end left panel -->
+
+  <div data-role="panel" id="rightPanel" data-display="overlay" data-position="right" data-theme="b"> 
+    <!--<h3>Permit Filter</h3>
+    <hr> -->
+      <form>
+      TYPE:
+      <fieldset class="ui-field-contain">
+          <select id="permitCategory">
+            <option value="All">All Categories</option>
+            <option value="Accessory">Accessory</option>
+            <option value="Building">Building</option>
+            <option value="Demolition">Demolition</option>
+            <option value="LandUse">Land Use</option>
+            <option value="Pre-Application">Pre-Application</option>
+            <option value="ROW">Right-of-Way</option>
+            <option value="SiteDevelopment">Site Development</option>
+            <option value="Utility">Utility</option>
+          </select>
+      </fieldset>
+
+         <!--start submenus ---->
+          <select id="Accessory" class="subMenu">
+            <option value="All">All Accessory</option>
+            <option value="Building Commercial Fire Protection ">Building Commercial Fire Protection</option>
+            <option value="Building Commercial Mechanical ">Building Commercial Mechanical</option>
+            <option value="Building Commercial Plumbing ">Building Commercial Plumbing</option>
+            <option value="Building Residential Fire Protection ">Building Residential Fire Protection</option>
+            <option value="Building Residential Mechanical ">Building Residential Mechanical</option>
+            <option value="Building Residential Plumbing ">Building Residential Plumbing</option>
+            <option value="ePermit Commercial Overlay ">ePermit Commercial Overlay</option>
+            <option value="ePermit Commercial Strip ">ePermit Commercial Strip</option>
+            <option value="ePermit Fire Alarm ">ePermit Fire Alarm</option>
+            <option value="ePermit Fire Sprinkler ">ePermit Fire Sprinkler</option>
+            <option value="ePermit Fire Transmitter ">ePermit Fire Transmitter</option>
+            <option value="ePermit Furnace Replacement ">ePermit Furnace Replacement</option>
+            <option value="ePermit HeatPump Replacement ">ePermit HeatPump Replacement</option>
+            <option value="ePermit Irrigation BackflowPreventer ">ePermit Irrigation BackflowPreventer</option>
+            <option value="ePermit Residential Ductless ">ePermit Residential Ductless</option>
+            <option value="ePermit Residential Mechanical ">ePermit Residential Mechanical</option>
+            <option value="ePermit Roof Overlay ">ePermit Roof Overlay</option>
+            <option value="ePermit Siding Replacement ">ePermit Siding Replacement</option>
+            <option value="ePermit Water Repair ">ePermit Water Repair</option>
+            <option value="ePermit WaterHeater Replacement ">ePermit WaterHeater Replacement</option>
+            <option value="ePermit Window Replacement ">ePermit Window Replacement</option>
+            <option value="Sign ">Sign</option>
+            <option value="Special Event ">Special Event</option>
+          </select>
+                          
+          <select id="Building" class="subMenu">
+            <option value="All">All Building</option>
+            <option value="Building Commercial Alteration ">Commercial Alteration</option>
+            <option value="Building Commercial New Building ">Commercial New Building</option>
+            <option value="Building Residential Alteration ">Residential Alteration</option>
+            <option value="Building Residential New Building ">Residential New Building</option>
+          </select>
+        
+          <select id="Demolition" class="subMenu">
+            <option value="All">All Demolition</option>
+            <option value="Building Commercial Demolition ">Building Commercial</option>
+            <option value="Building Residential Demolition ">Building Residential</option>
+            <option value="ePermit Residential Accessory Demolition ">ePermit Residential Accessory</option>
+            <option value="ePermit Residential Accessory Demolition No Fee ">ePermit Residential Accessory No Fee</option>
+            <option value="ePermit Residential Demo ">ePermit Residential Demo</option>
+            <option value="ePermit Residential Demolition ">ePermit Residential Demolition</option>
+          </select>
+        
+          <select id="LandUse" class="subMenu">
+            <option value="All">All Land Use</option>
+            <option value="Land Use Application ">Application</option>
+            <option value="Land Use CAPOMM ">CAPOMM</option>
+            <option value="Land Use Reconsideration or Appeal ">Reconsideration or Appeal</option>
+          </select>
+        
+          <select id="ROW" class="subMenu">
+            <option value="All">All Right-of-Way</option>
+            <option value="Right-of-Way Construction ">Construction</option>
+            <option value="ePermit Tree ">ePermit Tree</option>
+            <option value="Right-of-Way Occupancy ">Occupancy</option>
+            <option value="Right-of-Way Tree ">Tree</option>
+            <option value="Right-of-Way Use ">Use</option>
+            <option value="Right-of-Way Utility ">Utility</option>
+          </select>
+        
+          <select id="SiteDevelopment" class="subMenu">
+            <option value="All">All Site Development</option>
+            <option value="Site Development ">Development</option>
+            <option value="Site Noise Variance ">Noise Variance</option>
+            <option value="Site Work Order ">Work Order</option>
+          </select>
+        
+          <select id="Utility" class="subMenu">
+            <option value="All">All Utility</option>
+            <option value="Utility Connection Surfacewater ">Surfacewater</option>
+            <option value="Utility Connection Wastewater ">Wastewater</option>
+            <option value="Utility Connection Water ">Water</option>
+          </select>
+         <!--end submenus ---->
+
+    <hr>
+      STATUS:
+      <fieldset class="ui-field-contain">
+    			<select id="permitStatus">
+    				<option value="All">All Status</option>
+    				<option value="Application">Application</option>
+    				<option value="Review">Review</option>
+    				<option value="Inspections">Inspections</option>
+    				<option value="Finalized" selected>Finalized</option>
+    			</select>
+      </fieldset>
+
+    <hr>
+      TIME PERIOD:
+      <fieldset class="ui-field-contain">
+          <select id="permitSelect">
+            <option value=30>last 30 days</option>
+            <option value=90>last 3 months</option>
+            <option value=180>last 6 months</option>
+            <option value=365>last year</option>
+            <option value=730>last 2 years</option>
+            <option value=1095>last 3 years</option>
+            <option value=1460>last 4 years</option>
+            <option value=1825>last 5 years</option>
+            <option value=2190>last 6 years</option>
+            <option value=7>last 7 years</option>
+          </select>
+      </fieldset>
+    <hr>
+
+   </form>
+      
+  <p><br><button id="searchButton" style="background-color: #38c;" onclick="toggleLoader();mapSearch();this.disabled=true;">Update Selection</button></p>
+  <div id="mapLoader"></div>
+  <div id="mapCounter" style="text-align: center;"></div>
+  <div align="center"><button class="ui-btn ui-btn-inline ui-shadow ui-corner-all ui-btn-a ui-icon-arrow-d ui-btn-icon-right" onclick="exportToCSV('Selected_Permits.csv');">Download CSV</button></div>
+    <!--Place @ bottom of panel-->                    
+    <p align="center"><br><a href="#pageone" data-rel="close" class="ui-btn ui-btn-inline ui-shadow ui-corner-all ui-btn-a ui-icon-arrow-r ui-btn-icon-right">Close Filter</a></p>
+  </div> 
+ <!-- end right panel -->
+ 
+  <div data-role="footer" data-position="fixed">
+    <h1>
+    <span class="permit-footer">
+		City of Tacoma | Planning and Development Services | 747 Market Street, 3rd Floor | Tacoma, WA 98402 | Ph: 253-591-5030<br>
+    &copy; 2018 All rights reserved. People with hearing or speech impairments may contact us through Washington Relay Services 1-800-833-6388 (TTY or ASCII) 1-800-833-6386 (VCO) or 1-877-833-6341 (STS)
+    </span>
+    </h1>
+  </div>
+
+</div> 
+
+</body>
+</html>

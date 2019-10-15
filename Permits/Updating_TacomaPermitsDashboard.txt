@@ -1,0 +1,13 @@
+Use WinSCP to login to TacomaPermits.org
+
+Protocol: SFTP
+Host: tacomapermits.org
+Port:22
+Username: tacomapermits
+Password: tBu6ab@8JT
+Logon type: User or normal
+
+
+Web Folder:
+/var/www/tacomapermits.com/public_html/gis
+

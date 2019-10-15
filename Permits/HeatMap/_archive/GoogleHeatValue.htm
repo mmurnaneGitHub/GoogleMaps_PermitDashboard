@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<!-- http://www.joyofdata.de/blog/interactive-heatmaps-with-google-maps-api/ -->
+<!-- https://developers.google.com/maps/documentation/javascript/heatmaplayer -->
+
+  <head>
+
+     <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Tacoma Permit Value</title>
+    <style>
+      body {
+       font-family: Calibri, Verdana, Arial, sans-serif;
+      }
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #floating-panel {
+        position: absolute;
+        top: 10px;
+        left: 25%;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+        text-align: center;
+        font-family: 'Roboto','sans-serif';
+        line-height: 30px;
+        padding-left: 10px;
+      }
+      #floating-panel {
+        background-color: #fff;
+        border: 1px solid #999;
+        left: 25%;
+        padding: 5px;
+        position: absolute;
+        top: 10px;
+        z-index: 5;
+      }
+      #infoBox {width:250px;height:50px;position: relative; z-index: 1;background: #F3F3F3;bottom: 90px;left: 5px; padding: 5px; border-style: solid; border-width: 1px;}
+
+    </style>
+
+    <!--jQuery-->
+    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- Moment JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.1/moment.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
+
+  </head>
+
+  <body>
+    <div id="floating-panel">
+      <button onclick="toggleHeatmap()">Toggle Heatmap</button>
+      <button onclick="changeGradient()">Change gradient</button>
+      <button onclick="changeRadius()">Change radius</button>
+      <button onclick="changeOpacity()">Change opacity</button>
+    </div>
+    <div id="map"></div>
+    <div id="infoBox"></div>
+
+    <script>
+    //Moment.js
+    var startDate = moment().subtract(30, 'd').format("YYYY-MM-DD");
+
+      // This example requires the Visualization library. Include the libraries=visualization
+      // parameter when you first load the API. For example:
+      // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=visualization">
+
+      var map, heatmap;
+      var mapCount = 0;
+
+      function numberWithCommas(x) {
+          return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      }
+
+      //Accela Query
+      var permits = [];
+      var permitsResourceId = "6587d9b7-705f-41e4-bd98-781090bd7f3a";  //Tacoma ID 
+      var baseURI = "http://www.civicdata.com/api/action/datastore_search_sql?sql=";
+      var urlLatLongQuery = "SELECT * from \"permitsResourceId\" where \"Issued_Date\" > \'" + startDate + "\'";
+      var urlQuery = baseURI + encodeURIComponent(urlLatLongQuery.replace("permitsResourceId", permitsResourceId));
+        $.ajax({
+          url: urlQuery,
+          dataType: 'jsonp',
+          success: function(data) {
+           
+            //Loop through records and add to map
+            for (var i = 0; i < data.result.records.length; i++) {
+              if (data.result.records[i].Longitude!="" && data.result.records[i].Estimated_Valuation!="") {
+                 var latLng = {location: new google.maps.LatLng(data.result.records[i].Latitude, data.result.records[i].Longitude), weight: Number(data.result.records[i].Estimated_Valuation/100000)};
+                 //var latLng = {location: new google.maps.LatLng(data.result.records[i].Latitude, data.result.records[i].Longitude), weight: Number(data.result.records[i].Estimated_Valuation/7400000)};
+                 permits.push(latLng);  //add to array of permits weighted by value
+                 mapCount = mapCount + 1;
+              } 
+            }
+          toggleHeatmap(); //workaround for map loading before permits - toggle off
+          toggleHeatmap(); //workaround for map loading before permits - toggle on
+          document.getElementById('infoBox').innerHTML = 'Permits issued last 30 days: ' + numberWithCommas(data.result.records.length) + '<br>Permits with a location & value: ' + numberWithCommas(mapCount);
+          }
+        });
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 12,
+          center: new google.maps.LatLng(47.250138520439556, -122.47643585205077),
+          mapTypeId: 'hybrid'
+        });
+
+        heatmap = new google.maps.visualization.HeatmapLayer({
+          data: getPoints(),
+          map: map
+        });
+      }
+
+      function toggleHeatmap() {
+        heatmap.setMap(heatmap.getMap() ? null : map);
+      }
+
+      function changeGradient() {
+        //http://angrytools.com/gradient/
+        
+        var gradient = [
+          'rgba(0, 255, 255, 0)',
+          'rgba(0, 255, 255, 1)',
+          'rgba(0, 191, 255, 1)',
+          'rgba(0, 127, 255, 1)',
+          'rgba(0, 63, 255, 1)',
+          'rgba(0, 0, 255, 1)',
+          'rgba(0, 0, 223, 1)',
+          'rgba(0, 0, 191, 1)',
+          'rgba(0, 0, 159, 1)',
+          'rgba(0, 0, 127, 1)',
+          'rgba(63, 0, 91, 1)',
+          'rgba(127, 0, 63, 1)',
+          'rgba(191, 0, 31, 1)',
+          'rgba(255, 0, 0, 1)'
+        ]
+        
+        /*
+        var gradient = [
+        'rgba(255, 0, 0, 0)',
+        'rgba(255, 255, 0, 0.9)',
+        'rgba(0, 255, 0, 0.7)',
+        'rgba(173, 255, 47, 0.5)',
+        'rgba(152, 251, 152, 0)',
+        'rgba(152, 251, 152, 0)',
+        'rgba(0, 0, 238, 0.5)',
+        'rgba(186, 85, 211, 0.7)',
+        'rgba(255, 0, 255, 0.9)',
+        'rgba(255, 0, 0, 1)'
+        ]
+        */
+        /* 
+        var gradient = [
+            'rgba(255, 0, 0, 0)',
+            'rgba(0,0,255,0.45)',
+            'rgba(0,255,255,0.55)',
+            'rgba(0,255,0,0.65)',
+            'rgba(255,255,0,0.95)',
+            'rgba(255,0,0,1)'
+        ]
+        */
+        
+        heatmap.set('gradient', heatmap.get('gradient') ? null : gradient);
+      }
+
+      function changeRadius() {
+        heatmap.set('radius', heatmap.get('radius') ? null : 20);
+      }
+
+      function changeOpacity() {
+        heatmap.set('opacity', heatmap.get('opacity') ? null : 0.2);
+      }
+
+      // Heatmap data
+      function getPoints() {
+        return permits;
+      }
+      
+      
+    </script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPoaOE5Rhl1zF-w8kXaJ0taaDSvdi1L44&libraries=visualization&callback=initMap">
+    </script>
+  </body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <!--<meta http-equiv="X-UA-Compatible" content="IE=edge">-->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Tacoma Permits Dashboard</title>
+    <link rel="shortcut icon" href="images/tacoma16.ico">
+
+    <!-- Bootstrap Core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- MetisMenu CSS -->
+    <link href="css/plugins/metisMenu/metisMenu.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="css/Tacoma.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="font-awesome-4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+    
+    <!--<link rel="stylesheet" type="text/css" href="http://cdnjs.cloudflare.com/ajax/libs/c3/0.3.0/c3.min.css">-->
+    <link href="css/c3.min.css" rel="stylesheet">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- jQuery -->
+    <script src="js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <!--<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>-->
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- Metis Menu Plugin JavaScript -->
+    <script src="js/plugins/metisMenu/metisMenu.min.js"></script>
+
+    <!-- D3 & C3 Charts JavaScript -->
+    <script src="js/d3.min.js"></script>
+    <!--<script src="https://d3js.org/d3.v4.min.js"></script>-->
+    <!--<script src="http://cdnjs.cloudflare.com/ajax/libs/c3/0.3.0/c3.min.js"></script>-->
+    <script src="js/c3.min.js"></script>
+    
+    <!--d3-dsv for exporting to CSV> -->
+    <script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+
+    <!-- Custom Theme JavaScript -->
+    <script src="js/sb-admin-2.js"></script>
+
+    <!-- Momentjs JavaScript -->
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.1/moment.min.js"></script>-->
+    <!--<script src="http://cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>-->
+    <script src="js/moment.min.js"></script>
+    <script src="js/numeral.min.js"></script>
+    
+    <script src="js/dashboard.js" charset="utf-8"></script>
+
+</head>
+
+<body>
+
+    <div id="wrapper">
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+            <div class="navbar-header">
+                <!-- Menu for mobile -->
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <span class="navbar-brand" style="padding: 10px;"><img src="images/tacoma30.jpg" alt="Tacoma Logo" /></span>
+                <span class="navbar-brand" style="line-height: 25px;">Tacoma Permits (BETA)</span> 
+             </div>
+            <!-- /.navbar-header -->
+
+            <div class="navbar-default sidebar" role="navigation">
+                <div class="sidebar-nav navbar-collapse">
+                    <ul class="nav" id="side-menu">
+                            <!-- /input-group -->
+                        <li>
+                            <a href="index.html"><i class="fa fa-map-marker fa-fw"></i> Search Map</a>
+                        </li>
+                        <li>
+                            <a class="active" href="dashboard.html"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
+                        </li>
+                        <li>
+                            <a href="http://www.civicdata.com/organization/tacoma-ed21d4b6-552d" target="_blank"><i class="fa fa-info-circle fa-fw"></i> Tacoma CivicData</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.sidebar-collapse -->
+            </div>
+            <!-- /.navbar-static-side -->
+             
+        </nav>
+
+        <div id="page-wrapper">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h5 class="section-header">All Permits (Last 30 days)</h5>
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <div class="row">
+                <div class="col-lg-3 col-md-6">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <i class="fa fa-building fa-5x"></i>
+                                </div>
+                                <div class="col-xs-9 text-right">
+                                    <div class="huge" id="newApplications">Calculating</div>
+                                    <div>New Applications<br><button style="color: black;" onclick="exportToCSV('New_Applications.csv');">Download CSV</button></div>
+                                    <div></div> 
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="panel panel-yellow">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <i class="fa fa-check-circle-o fa-5x"></i>
+                                </div>
+                                <div class="col-xs-9 text-right">
+                                    <div class="huge" id="issuedPermits">Calculating</div>
+                                    <div>Issued Permits<br><button style="color: black;" onclick="exportToCSV('Issued_Permits.csv');">Download CSV</button></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="panel panel-green">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <i class="fa fa-money fa-5x"></i>
+                                </div>
+                                <div class="col-xs-9 text-right">
+                                    <div class="huge" id="totalConstructionValue">Calculating</div>
+                                    <div>Total Construction Cost<br><button style="color: black;" onclick="exportToCSV('Total_Construction_Cost.csv');">Download CSV</button></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.row -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="fa fa-bar-chart-o fa-fw"></i> New Applications by Day (Last 30 days)
+                        </div>
+                        <!-- /.panel-heading -->
+                        <div class="panel-body">
+                            
+                                <div id="byDay"></div>
+                           
+                        </div>
+                        <!-- /.panel-body -->
+                    </div>
+                    <!-- /.panel -->
+                </div>
+                <!-- /.col-lg-8 -->
+                <div class="col-lg-4">
+
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="fa fa-bar-chart-o fa-fw"></i> Issued Permits by Type <small>(Last 30 days)</small>
+                        </div>
+                        <div class="panel-body">
+                            <div id="permitTypes"></div>
+                        </div>
+                        <!-- /.panel-body -->
+                    </div>
+                    <!-- /.panel -->
+                </div>
+                <!-- /.col-lg-4 -->
+            </div>
+           <!-- /.row -->
+
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="fa fa-map-marker fa-fw"></i> Activity Heat Map <small>(Last 30 days)</small>
+                        </div>
+                        <div class="panel-body">
+                            <!--Google Map-->
+                            <!--<div id="permitTypes"></div>-->
+                            <iframe src="HeatMap/" height="320px" width="100%"></iframe>
+                            
+                        </div>
+                        <!-- /.panel-body -->
+                    </div>
+
+
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->
+            <div class="row">
+                <div class="col-lg-12">
+                    <h4 class="page-header"><a href="http://tacomapermits.org/" title="City of Tacoma Permits website" target="_blank">TacomaPermits.org</a></h4>
+                    City of Tacoma | Planning and Development Services | 747 Market Street, 3rd Floor | Tacoma, WA 98402 | Ph: 253-591-5030
+                    <br>&copy; 2018 All rights reserved. People with hearing or speech impairments may contact us through Washington Relay Services 1-800-833-6388 (TTY or ASCII) 1-800-833-6386 (VCO) or 1-877-833-6341 (STS)
+                    <br>&nbsp;
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->
+
+
+
+        </div>
+        <!-- /#page-wrapper -->
+
+    </div>
+    <!-- /#wrapper -->
+
+</body>
+
+</html>
